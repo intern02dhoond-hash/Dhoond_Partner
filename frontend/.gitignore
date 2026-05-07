@@ -1,0 +1,55 @@
+# Node dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native binaries
+*.hprof
+*.pyc
+*.pyo
+*.rbc
+*.swp
+*.orig
+*.apk
+*.aab
+*.app
+*.ipa
+*.tar.gz
+*.tgz
+*.zip
+*.tar
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# TypeScript
+*.tsbuildinfo
+
+# Watchman
+.watchmanconfig
