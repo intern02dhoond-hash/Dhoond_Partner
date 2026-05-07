@@ -5,7 +5,7 @@ const authService = require('./auth.service');
  */
 const syncPartner = async (req, res) => {
   const { uid, email, phone_number, name, picture } = req.user;
-  const { service_type } = req.body; 
+  const { service_type, full_name } = req.body; 
 
   try {
     // 1. Check if partner exists using service
@@ -22,7 +22,7 @@ const syncPartner = async (req, res) => {
     // 2. If not exists, create new partner using service
     partner = await authService.createPartner({
       uid, 
-      name: name || 'New Partner', 
+      name: full_name || name || 'New Partner', 
       phone: phone_number || 'N/A', 
       email, 
       photo: picture, 
@@ -36,7 +36,7 @@ const syncPartner = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Sync Error:', error.message);
+    console.error('Sync Error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error during sync'

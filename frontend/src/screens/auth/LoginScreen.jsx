@@ -2,17 +2,25 @@
  * Login Screen — Dhoond Partner
  * Phone number input for Firebase phone auth
  * Themed with Dhoond blue (#2E6BE6) branding
- * Styled with Tailwind CSS (twrnc)
+ *
+ * REAL FLOW: Firebase sends OTP → navigate to OTP screen with confirmationResult
  */
 
 import React, { useState } from "react";
-import { View, Text, SafeAreaView, StatusBar } from "react-native";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  StatusBar,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import tw from "../../../tw";
 
 const isValidNumber = (str) => {
-  if (typeof str !== "string") return false; // Handle empty strings
+  if (typeof str !== "string") return false;
   if (str.trim() === "") return true;
   return !isNaN(Number(str));
 };
@@ -20,17 +28,35 @@ const isValidNumber = (str) => {
 const LoginScreen = ({ navigation }) => {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendOTP = () => {
-    if (phone.length !== 10 && !isValidNumber(phone)) {
+  const handleSendOTP = async () => {
+    // ── Validation ──
+    if (phone.length !== 10 || !isValidNumber(phone)) {
       setError("Please enter a valid 10-digit phone number");
       return;
     }
 
     setError("");
-    // TODO: Trigger Firebase phone auth here
-    // Then navigate to OTP screen
-    navigation.navigate("OTP", { phone });
+    setIsLoading(true);
+
+    try {
+      console.log("✅ Mock OTP sent to:", phone);
+
+      // Simulate network delay
+      setTimeout(() => {
+        setIsLoading(false);
+        // Navigate to OTP screen
+        navigation.navigate("OTP", {
+          phone,
+          verificationId: "mock-verification",
+        });
+      }, 500);
+    } catch (err) {
+      console.error("❌ Mock OTP Error:", err);
+      setIsLoading(false);
+      setError("Failed to send OTP. Please try again.");
+    }
   };
 
   return (
@@ -65,10 +91,25 @@ const LoginScreen = ({ navigation }) => {
           keyboardType="phone-pad"
           maxLength={10}
           error={error}
+          editable={!isLoading}
         />
 
         {/* Submit Button */}
-        <Button title="Send OTP" onPress={handleSendOTP} />
+        {isLoading ? (
+          <View
+            style={{
+              backgroundColor: "#2E6BE6",
+              borderRadius: 14,
+              paddingVertical: 16,
+              alignItems: "center",
+              opacity: 0.7,
+            }}
+          >
+            <ActivityIndicator color="#FFFFFF" />
+          </View>
+        ) : (
+          <Button title="Send OTP" onPress={handleSendOTP} />
+        )}
 
         {/* Signup Link */}
         <Text style={tw`text-center mt-6 text-base text-txt-secondary`}>

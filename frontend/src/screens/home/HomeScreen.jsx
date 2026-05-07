@@ -2,9 +2,13 @@
  * Home Screen — Dhoond Partner
  * Main dashboard showing partner status, earnings card, and stats
  * Themed with #2E6BE6 blue identity
+ *
+ * REAL FLOW:
+ * - Duty toggle calls partnerApi.toggleDutyStatus() → updates PostgreSQL
+ * - User data comes from AuthContext (stored after login)
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +17,7 @@ import {
   StatusBar,
   TouchableOpacity,
   Animated,
+  Alert,
 } from 'react-native';
 import {
   Bell,
@@ -24,11 +29,13 @@ import {
   Package,
 } from 'lucide-react-native';
 import useAuth from '../../hooks/useAuth';
+import partnerApi from '../../api/partner.api';
 
 const HomeScreen = ({ navigation }) => {
   const { user, token, login } = useAuth();
   const isDutyOn = user?.duty_status === 'online';
   const toggleAnim = useRef(new Animated.Value(isDutyOn ? 1 : 0)).current;
+  const [isTogglingDuty, setIsTogglingDuty] = useState(false);
 
   useEffect(() => {
     Animated.spring(toggleAnim, {
@@ -39,9 +46,46 @@ const HomeScreen = ({ navigation }) => {
     }).start();
   }, [isDutyOn]);
 
+  /**
+   * ── REAL DUTY TOGGLE ──
+   * Calls backend PATCH /api/v1/partner/duty → updates PostgreSQL
+   * Then updates local state via AuthContext.login()
+   */
   const toggleDuty = async () => {
+    if (isTogglingDuty) return; // Prevent double-tap
+
     const newStatus = isDutyOn ? 'offline' : 'online';
-    await login(token || 'dummy_token_123', { ...user, duty_status: newStatus });
+    setIsTogglingDuty(true);
+
+    try {
+      // ── Call backend API ──
+      const response = await partnerApi.toggleDutyStatus(newStatus);
+      console.log('✅ Duty status updated:', response.data?.duty_status || newStatus);
+
+      // ── Update local state ──
+      // Keep the same token, update user's duty_status
+      await login(token, { ...user, duty_status: newStatus });
+
+    } catch (err) {
+      console.error('❌ Toggle Duty Error:', err);
+
+      // Show user-friendly error
+      if (err.response) {
+        Alert.alert(
+          'Update Failed',
+          err.response.data?.message || 'Could not update duty status. Please try again.'
+        );
+      } else if (err.request) {
+        Alert.alert(
+          'Network Error',
+          'Unable to reach the server. Check your connection.'
+        );
+      } else {
+        Alert.alert('Error', 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsTogglingDuty(false);
+    }
   };
 
   const barData = [0.32, 0.52, 0.68, 0.42, 0.85, 0.58, 1.0];
@@ -118,6 +162,7 @@ const HomeScreen = ({ navigation }) => {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={toggleDuty}
+            disabled={isTogglingDuty}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -127,6 +172,7 @@ const HomeScreen = ({ navigation }) => {
               paddingVertical: 8,
               borderRadius: 50,
               gap: 10,
+              opacity: isTogglingDuty ? 0.7 : 1,
             }}
           >
             {/* Status dot */}
@@ -143,7 +189,7 @@ const HomeScreen = ({ navigation }) => {
             />
 
             <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>
-              {isDutyOn ? 'On Duty' : 'Off Duty'}
+              {isTogglingDuty ? 'Updating...' : isDutyOn ? 'On Duty' : 'Off Duty'}
             </Text>
 
             {/* Toggle track */}

@@ -16,6 +16,20 @@ const verifyFirebaseToken = async (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
+  // --- MOCK TOKEN HANDLING ---
+  if (token.startsWith("mock-token-")) {
+    const phone = token.replace("mock-token-", "");
+    req.user = {
+      uid: phone, // using phone as uid
+      phone_number: `+91${phone}`,
+      // email: `${phone}@mock.com`,
+      email: `mock@mock.com`,
+      name: `User ${phone}`
+    };
+    return next();
+  }
+  // ---------------------------
+
   try {
     // Verify the token with Firebase Admin SDK
     const decodedToken = await admin.auth().verifyIdToken(token);

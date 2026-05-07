@@ -1,9 +1,15 @@
 /**
  * Signup Screen — Dhoond Partner
- * Fixed UI + Service Type Dropdown
+ * Registration form + Service Type Dropdown
+ *
+ * REAL FLOW:
+ * 1. User fills in name, phone, service type
+ * 2. Firebase sends OTP to the phone
+ * 3. Navigate to OTP screen with verificationId + signup data
+ * 4. After OTP verified → backend /partner/register creates the partner
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -13,86 +19,184 @@ import {
   TouchableOpacity,
   Modal,
   FlatList,
-} from 'react-native';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import { ChevronDown, Check, X } from 'lucide-react-native';
-import tw from '../../../tw';
+  Alert,
+} from "react-native";
+import Input from "../../components/common/Input";
+import { ChevronDown, Check, X } from "lucide-react-native";
 
 const SERVICE_TYPES = [
-  'Painter',
-  'AC Technician',
-  'RO Technician',
-  'Electrician',
-  'Washing Machine Technician',
-  'Refrigerator Technician',
+  "Painter",
+  "AC Technician",
+  "RO Technician",
+  "Electrician",
+  "Washing Machine Technician",
+  "Refrigerator Technician",
 ];
 
-const SignupScreen = ({ navigation }) => {
-  const [fullName, setFullName]       = useState('');
-  const [phone, setPhone]             = useState('');
-  const [serviceType, setServiceType] = useState('');
-  const [isLoading, setIsLoading]     = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+const isValidNumber = (str) => {
+  if (typeof str !== "string") return false;
+  if (str.trim() === "") return true;
+  return !isNaN(Number(str));
+};
 
-  const handleSignup = () => {
+const SignupScreen = ({ navigation }) => {
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [serviceType, setServiceType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSignup = async () => {
+    // ── Validation ──
+    if (!fullName.trim()) {
+      setError("Please enter your full name");
+      return;
+    }
+    if (phone.length !== 10 || !isValidNumber(phone)) {
+      setError("Please enter a valid 10-digit phone number");
+      return;
+    }
+    if (!serviceType) {
+      setError("Please select a service type");
+      return;
+    }
+
+    setError("");
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      console.log("✅ OTP sent for signup:", phone);
+
+      setTimeout(() => {
+        setIsLoading(false);
+        // Navigate to OTP screen with signup data + verificationId
+        navigation.navigate("OTP", {
+          phone,
+          fullName,
+          serviceType,
+          verificationId: "mock-verification",
+        });
+      }, 500);
+    } catch (err) {
+      console.error("❌ Mock Signup OTP Error:", err);
       setIsLoading(false);
-      navigation.navigate('OTP', { phone, fullName, serviceType });
-    }, 1500);
+      setError("Failed to send OTP. Please try again.");
+    }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#EEF2FB' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#EEF2FB" }}>
       <StatusBar barStyle="light-content" backgroundColor="#2E6BE6" />
 
       {/* ── Blue Header ── */}
-      <View style={{
-        backgroundColor: '#2E6BE6',
-        paddingTop: 60,
-        paddingBottom: 40,
-        alignItems: 'center',
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-      }}>
-        <Text style={{ fontSize: 32, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 }}>
+      <View
+        style={{
+          backgroundColor: "#2E6BE6",
+          paddingTop: 60,
+          paddingBottom: 40,
+          alignItems: "center",
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 32,
+            fontWeight: "800",
+            color: "#FFFFFF",
+            letterSpacing: -0.5,
+          }}
+        >
           Dhoond
         </Text>
-        <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: 4, marginTop: 4, textTransform: 'uppercase' }}>
+        <Text
+          style={{
+            fontSize: 12,
+            color: "rgba(255,255,255,0.7)",
+            letterSpacing: 4,
+            marginTop: 4,
+            textTransform: "uppercase",
+          }}
+        >
           Partner App
         </Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: 24,
+          paddingVertical: 32,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Title */}
-        <Text style={{ fontSize: 24, fontWeight: '700', color: '#1E293B', textAlign: 'center', marginBottom: 6 }}>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "700",
+            color: "#1E293B",
+            textAlign: "center",
+            marginBottom: 6,
+          }}
+        >
           Create Account
         </Text>
-        <Text style={{ fontSize: 15, color: '#64748B', textAlign: 'center', marginBottom: 32 }}>
+        <Text
+          style={{
+            fontSize: 15,
+            color: "#64748B",
+            textAlign: "center",
+            marginBottom: 32,
+          }}
+        >
           Join Dhoond as a service partner
         </Text>
+
+        {/* Error message */}
+        {error ? (
+          <Text
+            style={{
+              fontSize: 13,
+              color: "#EF4444",
+              textAlign: "center",
+              marginBottom: 16,
+              fontWeight: "500",
+            }}
+          >
+            {error}
+          </Text>
+        ) : null}
 
         {/* Full Name */}
         <Text style={labelStyle}>Full Name</Text>
         <Input
           value={fullName}
-          onChangeText={setFullName}
+          onChangeText={(val) => {
+            setFullName(val);
+            setError("");
+          }}
           placeholder="Enter your full name"
           autoCapitalize="words"
+          editable={!isLoading}
         />
 
         {/* Phone Number */}
         <Text style={labelStyle}>Phone Number</Text>
         <Input
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={(val) => {
+            if (isValidNumber(val)) {
+              setPhone(val);
+              setError("");
+            }
+          }}
           placeholder="Enter 10-digit number"
           keyboardType="phone-pad"
           maxLength={10}
+          editable={!isLoading}
         />
 
         {/* ── Service Type Dropdown ── */}
@@ -100,64 +204,73 @@ const SignupScreen = ({ navigation }) => {
         <TouchableOpacity
           onPress={() => setDropdownOpen(true)}
           activeOpacity={0.8}
+          disabled={isLoading}
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: "#FFFFFF",
             borderRadius: 14,
             paddingHorizontal: 16,
             paddingVertical: 16,
             marginBottom: 24,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
             borderWidth: 1.5,
-            borderColor: serviceType ? 'rgba(46,107,230,0.4)' : 'rgba(46,107,230,0.12)',
+            borderColor: serviceType
+              ? "rgba(46,107,230,0.4)"
+              : "rgba(46,107,230,0.12)",
           }}
         >
-          <Text style={{
-            fontSize: 15,
-            color: serviceType ? '#1E293B' : '#94A3B8',
-            fontWeight: serviceType ? '500' : '400',
-            flex: 1,
-          }}>
-            {serviceType || 'Select your service type'}
+          <Text
+            style={{
+              fontSize: 15,
+              color: serviceType ? "#1E293B" : "#94A3B8",
+              fontWeight: serviceType ? "500" : "400",
+              flex: 1,
+            }}
+          >
+            {serviceType || "Select your service type"}
           </Text>
           <ChevronDown
-            color={serviceType ? '#2E6BE6' : '#94A3B8'}
+            color={serviceType ? "#2E6BE6" : "#94A3B8"}
             size={20}
-            style={{ transform: [{ rotate: dropdownOpen ? '180deg' : '0deg' }] }}
+            style={{
+              transform: [{ rotate: dropdownOpen ? "180deg" : "0deg" }],
+            }}
           />
         </TouchableOpacity>
 
-        {/* ── Register Button (fixed) ── */}
+        {/* ── Register Button ── */}
         <TouchableOpacity
           onPress={handleSignup}
           disabled={isLoading}
           activeOpacity={0.85}
           style={{
-            backgroundColor: '#2E6BE6',
+            backgroundColor: "#2E6BE6",
             borderRadius: 14,
             paddingVertical: 17,
-            alignItems: 'center',
+            alignItems: "center",
             marginBottom: 24,
             opacity: isLoading ? 0.7 : 1,
           }}
         >
-          <Text style={{
-            fontSize: 16,
-            fontWeight: '700',
-            color: '#FFFFFF',
-            letterSpacing: 0.3,
-          }}>
-            {isLoading ? 'Registering...' : 'Register'}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "700",
+              color: "#FFFFFF",
+              letterSpacing: 0.3,
+            }}
+          >
+            {isLoading ? "Sending OTP..." : "Register"}
           </Text>
         </TouchableOpacity>
 
         {/* Login link */}
-        <Text style={{ textAlign: 'center', fontSize: 14, color: '#64748B' }}>
-          Already registered?{' '}
+        <Text style={{ textAlign: "center", fontSize: 14, color: "#64748B" }}>
+          Already registered?{" "}
           <Text
-            style={{ color: '#2E6BE6', fontWeight: '600' }}
-            onPress={() => navigation.navigate('Login')}
+            style={{ color: "#2E6BE6", fontWeight: "600" }}
+            onPress={() => navigation.navigate("Login")}
           >
             Login here
           </Text>
@@ -166,38 +279,53 @@ const SignupScreen = ({ navigation }) => {
 
       {/* ── Service Type Modal Dropdown ── */}
       <Modal visible={dropdownOpen} transparent animationType="slide">
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.45)',
-          justifyContent: 'flex-end',
-        }}>
-          <View style={{
-            backgroundColor: '#FFFFFF',
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
-            paddingTop: 16,
-            paddingBottom: 36,
-          }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.45)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              paddingTop: 16,
+              paddingBottom: 36,
+            }}
+          >
             {/* Handle bar */}
-            <View style={{
-              width: 40, height: 4, borderRadius: 2,
-              backgroundColor: '#E2E8F0',
-              alignSelf: 'center',
-              marginBottom: 16,
-            }} />
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: "#E2E8F0",
+                alignSelf: "center",
+                marginBottom: 16,
+              }}
+            />
 
             {/* Header */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 20,
-              marginBottom: 12,
-            }}>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: '#1E293B' }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                marginBottom: 12,
+              }}
+            >
+              <Text
+                style={{ fontSize: 17, fontWeight: "700", color: "#1E293B" }}
+              >
                 Select Service Type
               </Text>
-              <TouchableOpacity onPress={() => setDropdownOpen(false)} style={{ padding: 4 }}>
+              <TouchableOpacity
+                onPress={() => setDropdownOpen(false)}
+                style={{ padding: 4 }}
+              >
                 <X color="#94A3B8" size={22} />
               </TouchableOpacity>
             </View>
@@ -213,25 +341,28 @@ const SignupScreen = ({ navigation }) => {
                     onPress={() => {
                       setServiceType(item);
                       setDropdownOpen(false);
+                      setError("");
                     }}
                     activeOpacity={0.7}
                     style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                       paddingVertical: 16,
                       paddingHorizontal: 20,
-                      backgroundColor: isSelected ? '#EEF3FD' : 'transparent',
+                      backgroundColor: isSelected ? "#EEF3FD" : "transparent",
                       marginHorizontal: 12,
                       borderRadius: 12,
                       marginBottom: 4,
                     }}
                   >
-                    <Text style={{
-                      fontSize: 15,
-                      color: isSelected ? '#2E6BE6' : '#1E293B',
-                      fontWeight: isSelected ? '600' : '400',
-                    }}>
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: isSelected ? "#2E6BE6" : "#1E293B",
+                        fontWeight: isSelected ? "600" : "400",
+                      }}
+                    >
                       {item}
                     </Text>
                     {isSelected && <Check color="#2E6BE6" size={18} />}
@@ -248,8 +379,8 @@ const SignupScreen = ({ navigation }) => {
 
 const labelStyle = {
   fontSize: 14,
-  fontWeight: '600',
-  color: '#1E293B',
+  fontWeight: "600",
+  color: "#1E293B",
   marginBottom: 8,
 };
 

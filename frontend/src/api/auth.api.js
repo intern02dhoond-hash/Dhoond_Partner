@@ -8,10 +8,15 @@ import api from './axios';
 /**
  * Sync Firebase user with backend database
  * @param {Object} data - { service_type }
+ * @param {string} token - The auth token to use
  * @returns {Promise} Partner data
  */
-export const syncPartner = async (data) => {
-  return api.post('/auth/sync', data);
+export const syncPartner = async (data, token) => {
+  return api.post('/auth/sync', data, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 };
 
 /**
