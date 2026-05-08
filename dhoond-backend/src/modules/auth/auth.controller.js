@@ -24,7 +24,7 @@ const syncPartner = async (req, res) => {
       uid, 
       name: full_name || name || 'New Partner', 
       phone: phone_number || 'N/A', 
-      email, 
+      // email, 
       photo: picture, 
       serviceType: service_type || 'General'
     });
@@ -63,7 +63,7 @@ const getProfile = async (req, res) => {
       data: partner
     });
   } catch (error) {
-    console.error('Get Profile Error:', error.message);
+    console.error('Get Profile Error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

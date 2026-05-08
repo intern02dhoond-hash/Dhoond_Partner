@@ -22,6 +22,7 @@ import {
 import {
   Bell,
   User,
+  Power,
   Briefcase,
   Star,
   TrendingUp,
@@ -34,17 +35,16 @@ import partnerApi from '../../api/partner.api';
 const HomeScreen = ({ navigation }) => {
   const { user, token, login } = useAuth();
   const isDutyOn = user?.duty_status === 'online';
-  const toggleAnim = useRef(new Animated.Value(isDutyOn ? 1 : 0)).current;
+  const swipeAnim = useRef(new Animated.Value(isDutyOn ? 1 : 0)).current;
   const [isTogglingDuty, setIsTogglingDuty] = useState(false);
 
   useEffect(() => {
-    Animated.spring(toggleAnim, {
+    Animated.timing(swipeAnim, {
       toValue: isDutyOn ? 1 : 0,
-      friction: 6,
-      tension: 80,
-      useNativeDriver: false,
+      duration: 220,
+      useNativeDriver: true,
     }).start();
-  }, [isDutyOn]);
+  }, [isDutyOn, swipeAnim]);
 
   /**
    * ── REAL DUTY TOGGLE ──
@@ -135,6 +135,7 @@ const HomeScreen = ({ navigation }) => {
                   alignItems: 'center',
                 }}
                 activeOpacity={0.7}
+                onPress={() => navigation.navigate('Notifications')}
               >
                 <Bell color="#FFFFFF" size={18} />
               </TouchableOpacity>
@@ -167,62 +168,61 @@ const HomeScreen = ({ navigation }) => {
               flexDirection: 'row',
               alignItems: 'center',
               alignSelf: 'flex-start',
-              backgroundColor: '#1E3A5F',
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 50,
-              gap: 10,
+              backgroundColor: isDutyOn ? '#0F58E8' : '#1E3A5F',
+              paddingLeft: 14,
+              paddingRight: 8,
+              paddingVertical: 7,
+              borderRadius: 999,
+              gap: 12,
               opacity: isTogglingDuty ? 0.7 : 1,
+              borderWidth: 1,
+              borderColor: isDutyOn ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.12)',
             }}
           >
-            {/* Status dot */}
-            <Animated.View
-              style={{
-                width: 9,
-                height: 9,
-                borderRadius: 5,
-                backgroundColor: toggleAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['#EF4444', '#10B981'],
-                }),
-              }}
-            />
-
             <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>
               {isTogglingDuty ? 'Updating...' : isDutyOn ? 'On Duty' : 'Off Duty'}
             </Text>
 
-            {/* Toggle track */}
-            <Animated.View
+            {/* Swipe track */}
+            <View
               style={{
-                width: 40,
-                height: 22,
-                borderRadius: 11,
+                width: 56,
+                height: 30,
+                borderRadius: 15,
                 justifyContent: 'center',
+                backgroundColor: isDutyOn ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.14)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.22)',
                 paddingHorizontal: 2,
-                backgroundColor: toggleAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['rgba(255,255,255,0.15)', '#10B981'],
-                }),
               }}
             >
               <Animated.View
                 style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 9,
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  justifyContent: 'center',
+                  alignItems: 'center',
                   backgroundColor: '#FFFFFF',
+                  borderWidth: 1,
+                  borderColor: 'rgba(0,0,0,0.05)',
                   transform: [
                     {
-                      translateX: toggleAnim.interpolate({
+                      translateX: swipeAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [0, 18],
+                        outputRange: [0, 26],
                       }),
                     },
                   ],
                 }}
-              />
-            </Animated.View>
+              >
+                <Power
+                  size={14}
+                  strokeWidth={2.2}
+                  color={isDutyOn ? '#0F58E8' : '#EF4444'}
+                />
+              </Animated.View>
+            </View>
           </TouchableOpacity>
         </View>
 

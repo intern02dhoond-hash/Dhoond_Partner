@@ -41,7 +41,7 @@ const OTPScreen = ({ route, navigation }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [timer, setTimer] = useState(120);
+  const [timer, setTimer] = useState(60);
   const inputs = useRef([]);
 
   // Countdown timer

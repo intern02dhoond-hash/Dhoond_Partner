@@ -11,6 +11,7 @@ import Loader from '../components/common/Loader';
 import AuthNavigator from './AuthNavigator';
 import BottomTabs from './BottomTabs';
 import OrderDetailsScreen from '../screens/orders/OrderDetailsScreen';
+import NotificationScreen from '../screens/notifications/NotificationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,7 @@ const AppNavigator = () => {
           <>
             <Stack.Screen name="MainTabs" component={BottomTabs} />
             <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+            <Stack.Screen name="Notifications" component={NotificationScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
